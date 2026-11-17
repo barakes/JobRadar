@@ -22,6 +22,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
                            j.title         AS "title",
                            c.name          AS "companyName",
                            j.location      AS "location",
+                           j.country       AS "country",
                            j.department    AS "department",
                            j.url           AS "url",
                            j.first_seen_at AS "firstSeenAt"
@@ -32,6 +33,8 @@ public interface JobRepository extends JpaRepository<Job, Long> {
                            OR j.search_vector @@ websearch_to_tsquery('simple', CAST(:query AS TEXT)))
                       AND (CAST(:location AS TEXT) IS NULL
                            OR j.location ILIKE '%' || CAST(:location AS TEXT) || '%')
+                      AND (CAST(:country AS TEXT) IS NULL
+                           OR LOWER(j.country) = LOWER(CAST(:country AS TEXT)))
                     ORDER BY j.first_seen_at DESC, j.id DESC
                     """,
             countQuery = """
@@ -42,9 +45,12 @@ public interface JobRepository extends JpaRepository<Job, Long> {
                            OR j.search_vector @@ websearch_to_tsquery('simple', CAST(:query AS TEXT)))
                       AND (CAST(:location AS TEXT) IS NULL
                            OR j.location ILIKE '%' || CAST(:location AS TEXT) || '%')
+                      AND (CAST(:country AS TEXT) IS NULL
+                           OR LOWER(j.country) = LOWER(CAST(:country AS TEXT)))
                     """,
             nativeQuery = true)
     Page<JobSummary> search(@Param("query") String query,
                             @Param("location") String location,
+                            @Param("country") String country,
                             Pageable pageable);
 }

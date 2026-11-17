@@ -25,6 +25,7 @@ public class JobController {
     public PageResponse<JobResponse> searchJobs(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String country,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -37,7 +38,11 @@ public class JobController {
         }
 
         return PageResponse.from(
-                jobRepository.search(blankToNull(q), blankToNull(location), PageRequest.of(page, size)),
+                jobRepository.search(
+                        blankToNull(q),
+                        blankToNull(location),
+                        blankToNull(country),
+                        PageRequest.of(page, size)),
                 JobResponse::from);
     }
 

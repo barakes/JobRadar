@@ -9,6 +9,7 @@ public record JobResponse(
         String title,
         String companyName,
         String location,
+        String country,
         String department,
         String url,
         Instant firstSeenAt) {
@@ -19,6 +20,7 @@ public record JobResponse(
                 job.getTitle(),
                 job.getCompanyName(),
                 job.getLocation(),
+                job.getCountry(),
                 job.getDepartment(),
                 job.getUrl(),
                 job.getFirstSeenAt());

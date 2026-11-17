@@ -33,6 +33,10 @@ public class Job {
     @Column(length = 300)
     private String location;
 
+    // Derived from location, so jobs can be filtered by country no matter how each company writes it.
+    @Column(length = 100)
+    private String country;
+
     @Column(length = 200)
     private String department;
 
@@ -60,6 +64,7 @@ public class Job {
         this.externalId = externalId;
         this.title = title;
         this.location = location;
+        this.country = CountryResolver.resolve(location);
         this.department = department;
         this.url = url;
         this.description = description;
@@ -72,6 +77,7 @@ public class Job {
                         String url, String description, Instant seenAt) {
         this.title = title;
         this.location = location;
+        this.country = CountryResolver.resolve(location);
         this.department = department;
         this.url = url;
         this.description = description;
@@ -102,6 +108,10 @@ public class Job {
 
     public String getLocation() {
         return location;
+    }
+
+    public String getCountry() {
+        return country;
     }
 
     public String getDepartment() {

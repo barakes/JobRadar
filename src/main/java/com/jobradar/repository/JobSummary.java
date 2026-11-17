@@ -12,6 +12,8 @@ public interface JobSummary {
 
     String getLocation();
 
+    String getCountry();
+
     String getDepartment();
 
     String getUrl();
