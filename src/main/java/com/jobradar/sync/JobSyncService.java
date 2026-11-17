@@ -13,11 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,9 @@ public class JobSyncService {
     private final TransactionTemplate transactionTemplate;
     private final Map<JobSource, JobSourceClient> clients = new EnumMap<>(JobSource.class);
 
+    // Prevents two "sync all" runs (scheduled + manual) from overlapping.
+    private final AtomicBoolean syncAllRunning = new AtomicBoolean(false);
+
     public JobSyncService(CompanyRepository companyRepository,
                           JobRepository jobRepository,
                           TransactionTemplate transactionTemplate,
@@ -39,6 +44,35 @@ public class JobSyncService {
         this.jobRepository = jobRepository;
         this.transactionTemplate = transactionTemplate;
         clients.forEach(client -> this.clients.put(client.source(), client));
+    }
+
+    public SyncSummary syncAllActiveCompanies() {
+        if (!syncAllRunning.compareAndSet(false, true)) {
+            throw new IllegalStateException("A sync of all companies is already running");
+        }
+
+        try {
+            List<Company> companies = companyRepository.findByActiveTrue();
+            log.info("Sync of all companies started for {} companies", companies.size());
+
+            List<SyncResult> results = new ArrayList<>();
+            int failed = 0;
+
+            for (Company company : companies) {
+                try {
+                    results.add(syncCompany(company.getId()));
+                } catch (RuntimeException e) {
+                    // One failing company must not stop the others from syncing.
+                    failed++;
+                    log.warn("Sync failed for {} (id {}): {}", company.getName(), company.getId(), e.getMessage());
+                }
+            }
+
+            log.info("Sync of all companies finished: {} succeeded, {} failed", results.size(), failed);
+            return new SyncSummary(results.size(), failed, results);
+        } finally {
+            syncAllRunning.set(false);
+        }
     }
 
     public SyncResult syncCompany(Long companyId) {
