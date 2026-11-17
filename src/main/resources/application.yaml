@@ -14,3 +14,9 @@ spring:
 
   flyway:
     enabled: true
+
+jobradar:
+  sync:
+    enabled: ${SYNC_ENABLED:true}
+    initial-delay: ${SYNC_INITIAL_DELAY:PT30S}
+    interval: ${SYNC_INTERVAL:PT6H}
