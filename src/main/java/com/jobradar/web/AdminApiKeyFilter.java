@@ -17,7 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Set;
 
-// Protects every request that changes data. Read-only requests (like search) stay public.
+// Protects every request that changes data, and every request to private data (saved searches contain emails).
+// Public read-only requests (like job search) stay open.
 @Component
 public class AdminApiKeyFilter extends OncePerRequestFilter {
 
@@ -25,6 +26,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
 
     private static final String DEFAULT_LOCAL_KEY = "local-dev-key";
     private static final Set<String> READ_ONLY_METHODS = Set.of("GET", "HEAD", "OPTIONS");
+    private static final String PRIVATE_PATH = "/api/saved-searches";
     private static final Logger log = LoggerFactory.getLogger(AdminApiKeyFilter.class);
 
     private final byte[] expectedKey;
@@ -41,9 +43,15 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        boolean readOnly = READ_ONLY_METHODS.contains(request.getMethod());
-        boolean isApi = request.getRequestURI().startsWith("/api/");
-        return readOnly || !isApi;
+        String path = request.getRequestURI();
+
+        if (!path.startsWith("/api/")) {
+            return true;
+        }
+        if (path.startsWith(PRIVATE_PATH)) {
+            return false;
+        }
+        return READ_ONLY_METHODS.contains(request.getMethod());
     }
 
     @Override

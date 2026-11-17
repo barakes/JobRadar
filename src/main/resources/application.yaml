@@ -25,3 +25,6 @@ jobradar:
     enabled: ${SYNC_ENABLED:true}
     initial-delay: ${SYNC_INITIAL_DELAY:PT30S}
     interval: ${SYNC_INTERVAL:PT6H}
+  mail:
+    resend-api-key: ${RESEND_API_KEY:}
+    from: ${MAIL_FROM:JobRadar <onboarding@resend.dev>}
